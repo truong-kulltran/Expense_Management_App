@@ -1,34 +1,41 @@
 {
   "project_info": {
-    "project_number": "686540413195",
-    "project_id": "viet-wallet",
-    "storage_bucket": "viet-wallet.appspot.com"
+    "project_number": "576830555998",
+    "project_id": "manage-exchange-app",
+    "storage_bucket": "manage-exchange-app.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:686540413195:android:b7c5904245d4f7331bea0e",
+        "mobilesdk_app_id": "1:576830555998:android:8b6f5a9f503fda120bb1cf",
         "android_client_info": {
-          "package_name": "com.example.viet_wallet"
+          "package_name": "com.kulltran.m_e_app.manage_exchange_app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "686540413195-ljc6kkudjmej0qtrgj84499s1s81lgmg.apps.googleusercontent.com",
+          "client_id": "576830555998-uqlf2qsmsso7kb3ndtppumt1kqllhnc4.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDnjCjIZptR69Ii71OZC3SeP7wCULrQLwI"
+          "current_key": "AIzaSyDXeRJ-CnlFZjgKUnaAkZ8_f6Wz3YI1hK4"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "686540413195-ljc6kkudjmej0qtrgj84499s1s81lgmg.apps.googleusercontent.com",
+              "client_id": "576830555998-uqlf2qsmsso7kb3ndtppumt1kqllhnc4.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "576830555998-l73bgupcrcbhjbfdcjp2hbdhknh3fcgu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kulltran.meapp.manageExchangeApp"
+              }
             }
           ]
         }
