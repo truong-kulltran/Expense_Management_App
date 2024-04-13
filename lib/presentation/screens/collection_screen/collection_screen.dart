@@ -10,17 +10,31 @@ import 'package:viet_wallet/business/blocs/news_collection_bloc.dart';
 import 'package:viet_wallet/business/services/firebase_services.dart';
 import 'package:viet_wallet/data/models/collection_model.dart';
 import 'package:viet_wallet/data/models/wallet.dart';
+import 'package:viet_wallet/presentation/screens/planning_screen/balance_payments/balance_payment.dart';
 import 'package:viet_wallet/presentation/widgets/app_image.dart';
 import 'package:viet_wallet/presentation/widgets/primary_button.dart';
 import 'package:viet_wallet/business/blocs/option_category_bloc.dart';
 import 'package:viet_wallet/utils/enum/date_time_picker.dart';
 import 'package:viet_wallet/utils/enum/enum.dart';
 import 'package:viet_wallet/utils/screen_utilities.dart';
-import 'package:viet_wallet/utils/shared_preferences_storage.dart';
-import 'package:viet_wallet/utils/utils.dart';
 import '../option_category_screen/option_category.dart';
 import 'collection_event.dart';
 import 'collection_state.dart';
+
+class CollectionPage extends StatelessWidget {
+  final bool isEdit;
+  final CollectionModel? collectionReport;
+
+  const CollectionPage({super.key, this.isEdit = false, this.collectionReport});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<NewsCollectionBloc>(
+      create: (context) => NewsCollectionBloc(context)..add(CollectionInitialized()),
+      child: NewCollectionPage(isEdit: isEdit, collectionReport: collectionReport),
+    );
+  }
+}
 
 class NewCollectionPage extends StatefulWidget {
   final bool isEdit;
@@ -33,8 +47,6 @@ class NewCollectionPage extends StatefulWidget {
 }
 
 class _NewCollectionPageState extends State<NewCollectionPage> {
-  late NewsCollectionBloc _collectionBloc;
-
   String _currency = SharedPreferencesStorage().getCurrency();
 
   final _moneyController = TextEditingController();
@@ -57,30 +69,28 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
   bool isOnline = true;
 
   void initCollectionEdit() {
-    if (widget.collectionReport == null) {
-      return;
+    if (widget.collectionReport != null) {
+      setState(() {
+        itemOption = (widget.collectionReport?.transactionType == 'EXPENSE') ? ItemOption(itemId: 0, title: 'Chi tiền', icon: Icons.remove) : ItemOption(itemId: 1, title: 'Thu tiền', icon: Icons.add);
+        datePicker = formatToLocaleVietnam(DateTime.tryParse(widget.collectionReport?.ariseDate ?? '') ?? DateTime.now());
+        timePicker = DateFormat.Hms().format(DateTime.tryParse(widget.collectionReport?.ariseDate ?? '') ?? DateTime.now());
+        _noteController.text = widget.collectionReport?.description ?? '';
+        _moneyController.text = (widget.collectionReport?.amount).toString();
+        walletId = widget.collectionReport?.walletId;
+        walletName = widget.collectionReport?.walletName;
+        walletType = widget.collectionReport?.walletType;
+        itemCategorySelected = ItemCategory(
+          categoryId: widget.collectionReport?.categoryId,
+          title: widget.collectionReport?.categoryName,
+          iconLeading: widget.collectionReport?.categoryLogo,
+        );
+        imageUrl = widget.collectionReport?.imageUrl ?? '';
+      });
     }
-    setState(() {
-      itemOption = (widget.collectionReport?.transactionType == 'EXPENSE') ? ItemOption(itemId: 0, title: 'Chi tiền', icon: Icons.remove) : ItemOption(itemId: 1, title: 'Thu tiền', icon: Icons.add);
-      datePicker = formatToLocaleVietnam(DateTime.tryParse(widget.collectionReport?.ariseDate ?? '') ?? DateTime.now());
-      timePicker = DateFormat.Hms().format(DateTime.tryParse(widget.collectionReport?.ariseDate ?? '') ?? DateTime.now());
-      _noteController.text = widget.collectionReport?.description ?? '';
-      _moneyController.text = (widget.collectionReport?.amount).toString();
-      walletId = widget.collectionReport?.walletId;
-      walletName = widget.collectionReport?.walletName;
-      walletType = widget.collectionReport?.walletType;
-      itemCategorySelected = ItemCategory(
-        categoryId: widget.collectionReport?.categoryId,
-        title: widget.collectionReport?.categoryName,
-        iconLeading: widget.collectionReport?.categoryLogo,
-      );
-      imageUrl = widget.collectionReport?.imageUrl ?? '';
-    });
   }
 
   @override
   void initState() {
-    _collectionBloc = BlocProvider.of<NewsCollectionBloc>(context)..add(CollectionInitialized());
     initCollectionEdit();
     _noteController.addListener(() {
       setState(() {
@@ -96,36 +106,44 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
     _moneyController.dispose();
     _noteController.dispose();
     super.dispose();
-    _collectionBloc.close();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<NewsCollectionBloc, CollectionState>(
-      listenWhen: (context, state) {
-        return state is InitializedState || state is SuccessState || state is FailureState;
-      },
-      listener: (context, state) {
-        if (state is LoadingState) {
-          showLoading(context);
-        }
-        if (state is SuccessState) {
-          state.fromEvent == 'update' ? showMessage1OptionDialog(this.context, 'Cập nhật giao dịch thành công', onClose: () => _popBack(context, true)) : showMessage1OptionDialog(this.context, 'Thêm giao dịch thành công', onClose: () => reloadPage(context));
-        }
-        if (state is FailureState) {
-          showMessage1OptionDialog(context, 'Error!', content: state.errorMessage);
-        }
-      },
-      child: _body(context),
+    return Container(
+      color: Colors.white,
+      child: BlocConsumer<NewsCollectionBloc, CollectionState>(
+        listener: (context, state) {
+          if (state is AddSuccessState) {
+            showMessage1OptionDialog(this.context, 'Thêm giao dịch thành công', onClose: () => reloadPage(context));
+          }
+          if (state is UpdateSuccessState) {
+            showMessage1OptionDialog(this.context, 'Cập nhật giao dịch thành công' , onClose: () => _popBack(context, true));
+          }
+          if (state is FailureState) {
+            showMessage1OptionDialog(context, 'Error!', content: state.errorMessage);
+          }
+        },
+        builder: (context, state) {
+          Widget body = Container();
+          if (state is LoadingState) {
+            body = const AnimationLoading();
+          }
+          if (state is FetchDataSuccessState) {
+            body = _body(context, state.listWallet);
+          }
+          return body;
+        },
+      ),
     );
   }
 
   void _popBack(BuildContext context, value) {
-    Navigator.pop(context);
+    // Navigator.pop(context);
     Navigator.of(context).pop(value);
   }
 
-  Widget _body(BuildContext context) {
+  Widget _body(BuildContext context, List<Wallet> listWallet) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
       child: Scaffold(
@@ -169,7 +187,7 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 _money(),
-                _select(),
+                _select(listWallet),
                 _selectImage(),
                 _buttonSave(context),
               ],
@@ -197,7 +215,7 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
                       cancelLabel: 'Hủy',
                       okLabel: 'Xóa',
                       onOK: () {
-                        _collectionBloc.add(DeleteCollection(collectionId: widget.collectionReport!.id!));
+                        context.read<NewsCollectionBloc>().add(DeleteCollection(collectionId: widget.collectionReport!.id!));
                         Navigator.of(context).pop(true);
                       },
                     );
@@ -206,16 +224,16 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
                 PrimaryButton(
                   text: 'Cập nhật',
                   onTap: () async {
-                    _collectionBloc.add(UpdateCollection(
-                      collectionId: widget.collectionReport!.id!,
-                      amount: double.parse(_moneyController.text.trim().toString()),
-                      ariseDate: _getDateTimePicked() ?? (widget.collectionReport?.ariseDate ?? ''),
-                      categoryId: itemCategorySelected.categoryId!,
-                      description: _noteController.text.trim(),
-                      transactionType: (itemOption.itemId == 0) ? 'EXPENSE' : 'INCOME',
-                      walletId: walletId!,
-                      imageUrl: isOnline ? imageUrl : await FirebaseService().uploadImageToStorage(image: File(imageUrl!)),
-                    ));
+                    context.read<NewsCollectionBloc>().add(UpdateCollection(
+                          collectionId: widget.collectionReport!.id!,
+                          amount: double.parse(_moneyController.text.trim().toString()),
+                          ariseDate: _getDateTimePicked() ?? (widget.collectionReport?.ariseDate ?? ''),
+                          categoryId: itemCategorySelected.categoryId!,
+                          description: _noteController.text.trim(),
+                          transactionType: (itemOption.itemId == 0) ? 'EXPENSE' : 'INCOME',
+                          walletId: walletId!,
+                          imageUrl: isOnline ? imageUrl : await FirebaseService().uploadImageToStorage(image: File(imageUrl!)),
+                        ));
                   },
                 ),
               ],
@@ -238,19 +256,20 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
   }
 
   Future<void> _postCollection(BuildContext context) async {
-    _collectionBloc.add(AddNewCollection(
-      amount: double.parse(_moneyController.text.trim().toString()),
-      ariseDate: _getDateTimePicked() ?? DateTime.now().toIso8601String(),
-      categoryId: itemCategorySelected.categoryId!,
-      description: _noteController.text.trim(),
-      transactionType: (itemOption.itemId == 0) ? 'EXPENSE' : 'INCOME',
-      walletId: walletId!,
-      imageUrl: isNotNullOrEmpty(imageUrl) ? await FirebaseService().uploadImageToStorage(image: File(imageUrl!)) : null,
-    ));
+
+    context.read<NewsCollectionBloc>().add(AddNewCollection(
+          amount: double.parse(_moneyController.text.trim().toString()),
+          ariseDate: _getDateTimePicked() ?? DateTime.now().toIso8601String(),
+          categoryId: itemCategorySelected.categoryId!,
+          description: _noteController.text.trim(),
+          transactionType: (itemOption.itemId == 0) ? 'EXPENSE' : 'INCOME',
+          walletId: walletId!,
+          imageUrl: isNotNullOrEmpty(imageUrl) ? await FirebaseService().uploadImageToStorage(image: File(imageUrl!)) : '',
+        ));
   }
 
   void reloadPage(BuildContext context) {
-    Navigator.pop(context);
+    context.read<NewsCollectionBloc>().add(CollectionInitialized());
 
     setState(() {
       _moneyController.clear();
@@ -402,7 +421,7 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
     );
   }
 
-  Widget _select() {
+  Widget _select(List<Wallet> listWallet) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
       child: Container(
@@ -419,7 +438,7 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
             Divider(height: 0.5, color: Colors.grey.withOpacity(0.3)),
             _pickDateTime(),
             Divider(height: 0.5, color: Colors.grey.withOpacity(0.3)),
-            _selectWallet(),
+            _selectWallet(listWallet),
           ],
         ),
       ),
@@ -539,7 +558,7 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
             child: Text(datePicker),
           ),
           InkWell(
-            onTap: () => showDatePickerPlus(
+            onTap: () => showTimePickerPlus(
               context,
               currentTime: DateTime.now(),
               onConfirm: (time) {
@@ -559,13 +578,10 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
     );
   }
 
-  Widget _selectWallet() {
-    return BlocBuilder(
-      builder: (context, state) {
-        if (state is InitializedState) {
-          List<Wallet> listWallet = state.listWallet;
-
-          return ListTile(
+  Widget _selectWallet(List<Wallet> listWallet) {
+    return listWallet.isEmpty
+        ? const SizedBox.shrink()
+        : ListTile(
             onTap: () async {
               await showModalBottomSheet(
                 context: context,
@@ -664,10 +680,6 @@ class _NewCollectionPageState extends State<NewCollectionPage> {
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           );
-        }
-        return Container();
-      },
-    );
   }
 
   Widget _money() {

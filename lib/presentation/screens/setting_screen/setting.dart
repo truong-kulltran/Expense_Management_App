@@ -49,7 +49,7 @@ class _SettingPageState extends State<SettingPage> {
             children: [
               const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('Cài đặt chung', style: TextStyle(fontSize: 16, color: Colors.grey))),
               _widgetHideAmount(),
-              _itemOption(icon: Icons.lock_outline, title: 'Bảo mật', onTap: _navToSecurityScreen(context)),
+              _itemOption(icon: Icons.lock_outline, title: 'Bảo mật', onTap: () =>_navToSecurityScreen(context)),
               Divider(height: 0.5, color: Colors.grey.withOpacity(0.2)),
               _logout(),
             ],
@@ -75,10 +75,10 @@ class _SettingPageState extends State<SettingPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('Tính năng', style: TextStyle(fontSize: 16, color: Colors.grey))),
-            _itemOption(title: 'Hạn mức chi', imagePath: 'images/ic_spending_limit.png', onTap: _navToLimitScreen(context)),
-            _itemOption(title: 'Hạng mục thu/chi', icon: Icons.list_alt_outlined, onTap: _navToCategoryScreen(context)),
-            _itemOption(title: 'Ghi chép định kỳ', icon: Icons.edit_calendar_outlined, onTap: _navToRecurringScreen(context)),
-            _itemOption(title: 'Xuất file excel', imagePath: 'images/ic_excel_file.png', onTap: _navToExportScreen(context)),
+            _itemOption(title: 'Hạn mức chi', imagePath: 'images/ic_spending_limit.png', onTap: ()=> _navToLimitScreen(context)),
+            _itemOption(title: 'Hạng mục thu/chi', icon: Icons.list_alt_outlined, onTap:() => _navToCategoryScreen(context)),
+            _itemOption(title: 'Ghi chép định kỳ', icon: Icons.edit_calendar_outlined, onTap:() => _navToRecurringScreen(context)),
+            _itemOption(title: 'Xuất file excel', imagePath: 'images/ic_excel_file.png', onTap:() => _navToExportScreen(context)),
           ],
         ),
       ),

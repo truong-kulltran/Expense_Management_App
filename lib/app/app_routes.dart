@@ -5,13 +5,11 @@ import 'package:viet_wallet/business/blocs/current_finances_bloc.dart';
 import 'package:viet_wallet/business/blocs/expenditure_report_bloc.dart';
 import 'package:viet_wallet/business/blocs/export_file_bloc.dart';
 import 'package:viet_wallet/business/blocs/limit_bloc.dart';
-import 'package:viet_wallet/business/blocs/news_collection_bloc.dart';
 import 'package:viet_wallet/business/blocs/recurring_transaction_bloc.dart';
 import 'package:viet_wallet/business/blocs/revenue_report_bloc.dart';
 import 'package:viet_wallet/business/blocs/login_bloc.dart';
 import 'package:viet_wallet/business/blocs/sign_up_bloc.dart';
 import 'package:viet_wallet/data/models/collection_model.dart';
-import 'package:viet_wallet/presentation/screens/collection_screen/collection_event.dart';
 import 'package:viet_wallet/presentation/screens/collection_screen/collection_screen.dart';
 import 'package:viet_wallet/presentation/screens/password_screen/forgot_password/forgot_password.dart';
 import 'package:viet_wallet/presentation/screens/password_screen/new_password/new_password.dart';
@@ -140,10 +138,7 @@ class AppRoutes {
       },
       AppRoutes.collection: (context) {
         final args = ModalRoute.of(context)!.settings.arguments as CollectionModel;
-        return BlocProvider(
-          create: (context) => NewsCollectionBloc(context)..add(CollectionInitialized()),
-          child: NewCollectionPage(isEdit: true, collectionReport: args),
-        );
+        return CollectionPage(isEdit: true, collectionReport: args);
       }
     };
   }

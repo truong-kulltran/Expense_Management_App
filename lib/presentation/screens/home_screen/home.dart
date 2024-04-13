@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:viet_wallet/app/app_routes.dart';
+import 'package:viet_wallet/business/blocs/expenditure_report_bloc.dart';
+import 'package:viet_wallet/business/blocs/revenue_report_bloc.dart';
 import 'package:viet_wallet/data/models/data_sfcartesian_char_model.dart';
 import 'package:viet_wallet/data/models/wallet.dart';
 import 'package:viet_wallet/data/models/week_report_model.dart';
 import 'package:viet_wallet/presentation/screens/home_screen/home_state.dart';
-import 'package:viet_wallet/presentation/screens/report_screen/expenditure_report/expenditure_report.dart';
-import 'package:viet_wallet/presentation/screens/report_screen/revenue_report/revenue_report.dart';
+import 'package:viet_wallet/presentation/screens/report_screen/report_screen.dart';
 import 'package:viet_wallet/presentation/widgets/animation_loading.dart';
 import 'package:viet_wallet/business/blocs/home_bloc.dart';
-import 'package:viet_wallet/utils/enum/api_error_result.dart';
 import 'package:viet_wallet/utils/screen_utilities.dart';
 import 'package:viet_wallet/utils/shared_preferences_storage.dart';
 import 'package:viet_wallet/utils/utils.dart';
@@ -20,96 +20,90 @@ import '../wallet_detail_screen/wallet_detail.dart';
 import '../../../business/blocs/wallet_details_bloc.dart';
 import 'home_event.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ExpenditureReportBloc>(create: (context) => ExpenditureReportBloc(context)),
+        BlocProvider<RevenueReportBloc>(create: (context) => RevenueReportBloc(context)),
+      ],
+      child: BlocProvider(create: (context) => HomePageBloc(context)..add(InitializedEvent()), child: const HomeView()),
+    );
+  }
 }
 
-class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
+class HomeView extends StatefulWidget {
+  const HomeView({Key? key}) : super(key: key);
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
   bool _isShowBalance = SharedPreferencesStorage().getHiddenAmount();
-  int notificationBadge = 3;
+  int notificationBadge = 0;
 
-  late HomePageBloc _homePageBloc;
-
-  late TabController _tabController;
 
   final String currency = SharedPreferencesStorage().getCurrency();
 
   bool _showDetail = true;
 
   void _reloadPage() {
-    _homePageBloc.add(HomeInitial());
     Future.delayed(const Duration(milliseconds: 1500), () {
-      setState(() {});
+      context.read<HomePageBloc>().add(InitializedEvent());
     });
   }
 
-  @override
-  void initState() {
-    _tabController = TabController(length: 2, vsync: this);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _homePageBloc.close();
-    _tabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomePageBloc, HomePageState>(
-      listenWhen: (preState, curState) {
-        return curState.apiError != ApiError.noError;
-      },
-      listener: (context, curState) {
-        if (curState.apiError == ApiError.internalServerError) {
-          showMessage1OptionDialog(context, 'Error!', content: 'Internal_server_error');
-        }
-        if (curState.apiError == ApiError.noInternetConnection) {
-          showMessageNoInternetDialog(context);
+      listener: (context, state) {
+        if (state is FailureState) {
+          showMessage1OptionDialog(context, state.errorMessage);
         }
       },
-      builder: (context, curState) => _body(context, curState),
+      builder: (context, state) {
+        if (state is SuccessState) {
+          return _body(context, state);
+        }
+        return const AnimationLoading();
+      },
     );
   }
 
-  Widget _body(BuildContext context, HomePageState state) {
+  Widget _body(BuildContext context, SuccessState state) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: state.isLoading
-          ? const AnimationLoading()
-          : RefreshIndicator(
-              onRefresh: () async => _reloadPage(),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _balance((state.moneyTotal ?? 0).toDouble()),
-                      _myWallet(state.listWallet),
-                      _reportWeek(state.weekReport),
-                      _expenseReport(),
-                    ],
-                  ),
-                ),
-              ),
+      body: RefreshIndicator(
+        onRefresh: () async => _reloadPage(),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                _balance(state.amount),
+                _myWallet(state.listWallet),
+                _reportWeek(state.weekReport),
+                ReportScreen(preContext: context),
+              ],
             ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _reportWeek(WeekReportModel? report) {
-    final List<DataSf> chartData = report?.detailReport ?? [];
-
+  Widget _reportWeek(WeekReportModel report) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
       child: SizedBox(
-        height: _showDetail ? 400 + 40 * (chartData.length).toDouble() : 400,
+        height: report.detailReport.isEmpty? 140 : _showDetail ? 400 + 40 * (report.detailReport.length).toDouble() : 400,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -127,21 +121,30 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       padding: EdgeInsets.only(left: 10, top: 10, bottom: 10.0),
                       child: Text('(Đơn vị: triệu VNĐ)', style: TextStyle(fontSize: 12, color: Colors.black)),
                     ),
-                    SfCartesianChart(
-                      primaryXAxis: CategoryAxis(),
-                      tooltipBehavior: TooltipBehavior(enable: true),
-                      series: <ChartSeries<DataSf, String>>[
-                        ColumnSeries<DataSf, String>(
-                          dataSource: chartData,
-                          xValueMapper: (DataSf data, _) => data.title,
-                          yValueMapper: (DataSf data, _) => data.value / 1000000,
-                          name: 'Báo cáo tuần',
-                          color: Theme.of(context).primaryColor,
-                          borderRadius: const BorderRadius.only(topRight: Radius.circular(5), topLeft: Radius.circular(5)),
-                        )
-                      ],
-                    ),
-                    listDetails(chartData),
+                    report.detailReport.isEmpty
+                        ?  Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                            child: Text(
+                              'Không thể hiển thị báo cáo tuần do chưa có hoạt động chi tiêu nào trong tuần.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color:  Theme.of(context).primaryColor.withOpacity(0.7)),
+                            ),
+                          )
+                        : SfCartesianChart(
+                            primaryXAxis: CategoryAxis(),
+                            tooltipBehavior: TooltipBehavior(enable: true),
+                            series: <ChartSeries<DataSf, String>>[
+                              ColumnSeries<DataSf, String>(
+                                dataSource: report.detailReport,
+                                xValueMapper: (DataSf data, _) => data.title,
+                                yValueMapper: (DataSf data, _) => data.value / 1000000,
+                                name: 'Báo cáo tuần',
+                                color: Theme.of(context).primaryColor,
+                                borderRadius: const BorderRadius.only(topRight: Radius.circular(5), topLeft: Radius.circular(5)),
+                              )
+                            ],
+                          ),
+                    if(report.detailReport.isNotEmpty) listDetails(report.detailReport),
                   ],
                 ),
               ),
@@ -152,72 +155,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _expenseReport() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: SizedBox(
-        height: 550,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text('Báo cáo tỉ lệ chi tiêu theo hạng mục', textAlign: TextAlign.left, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Container(
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Container(
-                          height: 40,
-                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.background, borderRadius: BorderRadius.circular(10)),
-                          child: TabBar(
-                            controller: _tabController,
-                            unselectedLabelColor: Colors.grey[500],
-                            labelColor: Colors.black,
-                            labelStyle: const TextStyle(fontSize: 14),
-                            padding: const EdgeInsets.all(2),
-                            indicatorWeight: 1.5,
-                            indicatorColor: Colors.black,
-                            indicator: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                            tabs: const [
-                              Tab(text: 'Hạng mục chi'),
-                              Tab(text: 'Hạng mục thu'),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: const [
-                            ExpenditureReport(),
-                            RevenueReport(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _myWallet(List<Wallet>? listWallet) {
+  Widget _myWallet(List<Wallet> listWallet) {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0),
       child: Container(
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(15)),
-          color: Colors.white,
-        ),
+        decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(15)), color: Colors.white),
         child: Column(
           children: [
             Padding(
@@ -239,10 +181,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 10.0),
-              child: Divider(height: 1, color: Colors.grey),
-            ),
+            const Padding(padding: EdgeInsets.only(bottom: 10.0), child: Divider(height: 1, color: Colors.grey)),
             isNullOrEmpty(listWallet)
                 ? Container(
                     height: 60,
@@ -250,14 +189,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     child: Text(
                       'Bạn chưa có tài khoản/ví.\nVui lòng tạo mới tài khoản/ví.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Theme.of(context).primaryColor),
                     ),
                   )
                 : SizedBox(
-                    height: 60 * (listWallet!.length).toDouble() + 15,
+                    height: 60 * (listWallet.length).toDouble() + 15,
                     child: ListView.builder(
                       padding: EdgeInsets.zero,
                       physics: const NeverScrollableScrollPhysics(),
@@ -289,9 +225,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Container(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.8,
-                      ),
+                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
                       child: Text(
                         _isShowBalance ? '${formatterDouble(balance)}  $currency' : '******  $currency',
                         maxLines: 1,
@@ -314,7 +248,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ],
                 ),
               ),
-              badge.Badge(
+             if(notificationBadge > 0) badge.Badge(
                 showBadge: (notificationBadge > 0),
                 badgeContent: Text((notificationBadge.toString()), textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
                 badgeStyle: const badge.BadgeStyle(badgeColor: Colors.red, padding: EdgeInsets.fromLTRB(4, 2, 4, 2)),
@@ -337,7 +271,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   Widget _createItemWallet(BuildContext context, Wallet wallet, {required int thisIndex, required int endIndex}) {
     return InkWell(
-      onTap: _pushToWalletDetails(context, wallet),
+      onTap: () => _pushToWalletDetails(context, wallet),
       child: Container(
         height: 60,
         alignment: Alignment.center,
@@ -380,7 +314,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget listDetails(List<DataSf>? listReport) {
+  Widget listDetails(List<DataSf> listReport) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -405,7 +339,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
           if (_showDetail)
             SizedBox(
-              height: 40 * (listReport!.length).toDouble(),
+              height: 40 * (listReport.length).toDouble(),
               child: ListView.builder(
                 padding: EdgeInsets.zero,
                 physics: const NeverScrollableScrollPhysics(),

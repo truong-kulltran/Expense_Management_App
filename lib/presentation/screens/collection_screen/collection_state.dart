@@ -1,24 +1,45 @@
 import 'package:equatable/equatable.dart';
 import 'package:viet_wallet/data/models/wallet.dart';
 
-// class NewsCollectionState implements ApiResultState {
-//   final bool isLoading;
-//   final ApiError _apiError;
-//   final List<Wallet>? listWallet;
-//
-//   NewsCollectionState({ApiError apiError = ApiError.noError, this.isLoading = false, this.listWallet}) : _apiError = apiError;
-//
-//   @override
-//   ApiError get apiError => _apiError;
-// }
-//
-// extension NewCollectionStateExtension on NewsCollectionState {
-//   NewsCollectionState copyWith({bool? isLoading, ApiError? apiError, List<Wallet>? listWallet}) => NewsCollectionState(
-//         isLoading: isLoading ?? this.isLoading,
-//         apiError: apiError ?? this.apiError,
-//         listWallet: listWallet ?? this.listWallet,
-//       );
-// }
+class NewCollectionState {
+  final bool isLoading;
+  final bool isAddSuccess;
+  final bool isUpdateSuccess;
+  final bool isError;
+  final String? message;
+  final List<Wallet> list;
+
+  NewCollectionState({
+    this.isLoading = false,
+    this.isAddSuccess = false,
+    this.isUpdateSuccess = false,
+    this.isError = false,
+    this.message,
+    this.list = const [],
+  });
+
+  NewCollectionState copyWith({
+    bool? isLoading,
+    bool? isAddSuccess,
+    bool? isUpdateSuccess,
+    bool? isError,
+    String? message,
+    List<Wallet>? list,
+  }) =>
+      NewCollectionState(
+        isLoading: isLoading ?? this.isLoading,
+        isAddSuccess: isAddSuccess ?? this.isAddSuccess,
+        isUpdateSuccess: isUpdateSuccess ?? this.isUpdateSuccess,
+        isError: isError ?? this.isError,
+        message: message ?? this.message,
+        list: list ?? this.list,
+      );
+
+  @override
+  String toString() {
+    return 'NewCollectionState{isLoading: $isLoading, isAddSuccess: $isAddSuccess, isUpdateSuccess: $isUpdateSuccess, isError: $isError, message: $message, list: $list}';
+  }
+}
 
 abstract class CollectionState extends Equatable {
   const CollectionState();
@@ -27,24 +48,20 @@ abstract class CollectionState extends Equatable {
   List<Object> get props => [];
 }
 
-class InitializedState extends CollectionState {
+class LoadingState extends CollectionState {}
+
+class FetchDataSuccessState extends CollectionState {
   final List<Wallet> listWallet;
 
-  const InitializedState({required this.listWallet});
+  const FetchDataSuccessState({required this.listWallet});
 
   @override
   List<Object> get props => [listWallet];
 }
 
-class LoadingState extends CollectionState {}
+class AddSuccessState extends CollectionState {}
 
-class SuccessState extends CollectionState {
-  final String fromEvent;
-
-  const SuccessState({required this.fromEvent});
-  @override
-  List<Object> get props => [fromEvent];
-}
+class UpdateSuccessState extends CollectionState {}
 
 class FailureState extends CollectionState {
   final String errorMessage;

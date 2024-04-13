@@ -1,29 +1,29 @@
-import 'package:viet_wallet/business/blocs/api_result_state.dart';
+import 'package:equatable/equatable.dart';
 import 'package:viet_wallet/data/models/category_report_model.dart';
-import 'package:viet_wallet/utils/enum/api_error_result.dart';
 
-class ExpenditureReportState implements ApiResultState {
-  final bool isLoading;
-  final ApiError _apiError;
-  final List<CategoryReportModel>? listReport;
-
-  ExpenditureReportState({
-    this.isLoading = true,
-    ApiError apiError = ApiError.noError,
-    this.listReport
-  }) : _apiError = apiError;
+abstract class ExpenditureReportState extends Equatable {
+  const ExpenditureReportState();
 
   @override
-  ApiError get apiError => _apiError;
+  List<Object> get props => [];
+}
 
-  ExpenditureReportState copyWith({
-    bool? isLoading,
-    ApiError? apiError,
-    List<CategoryReportModel>? listReport
-  }) =>
-      ExpenditureReportState(
-        isLoading: isLoading ?? this.isLoading,
-        apiError: apiError ?? this.apiError,
-        listReport: listReport ?? this.listReport,
-      );
+class LoadingState extends ExpenditureReportState {}
+
+class SuccessState extends ExpenditureReportState {
+  final List<CategoryReportModel> expenditureReports;
+
+  const SuccessState({required this.expenditureReports});
+
+  @override
+  List<Object> get props => [expenditureReports];
+}
+
+class FailureState extends ExpenditureReportState {
+  final String errorMessage;
+
+  const FailureState({required this.errorMessage});
+
+  @override
+  List<Object> get props => [errorMessage];
 }

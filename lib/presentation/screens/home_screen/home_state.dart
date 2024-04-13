@@ -1,31 +1,45 @@
-import 'package:viet_wallet/business/blocs/api_result_state.dart';
+import 'package:equatable/equatable.dart';
 import 'package:viet_wallet/data/models/wallet.dart';
 import 'package:viet_wallet/data/models/week_report_model.dart';
-import 'package:viet_wallet/utils/enum/api_error_result.dart';
 
-class HomePageState implements ApiResultState {
-  final bool isLoading;
-  final ApiError _apiError;
-  final double? moneyTotal;
-  final List<Wallet>? listWallet;
-  final WeekReportModel? weekReport;
-
-  HomePageState({
-    this.isLoading = true,
-    ApiError apiError = ApiError.noError,
-    this.moneyTotal,
-    this.listWallet,
-    this.weekReport,
-  }) : _apiError = apiError;
+abstract class HomePageState extends Equatable {
+  const HomePageState();
 
   @override
-  ApiError get apiError => _apiError;
+  List<Object> get props => [];
+}
 
-  HomePageState copyWith({bool? isLoading, ApiError? apiError, double? moneyTotal, List<Wallet>? listWallet, WeekReportModel? weekReport}) => HomePageState(
-        isLoading: isLoading ?? this.isLoading,
-        apiError: apiError ?? this.apiError,
-        moneyTotal: moneyTotal ?? this.moneyTotal,
+class InitializedState extends HomePageState {}
+
+class LoadingState extends HomePageState {}
+
+class SuccessState extends HomePageState {
+  final List<Wallet> listWallet;
+  final double amount;
+  final WeekReportModel weekReport;
+
+  const SuccessState({required this.listWallet, required this.amount, required this.weekReport});
+
+  @override
+  List<Object> get props => [listWallet, amount, weekReport];
+
+  SuccessState copyWith({List<Wallet>? listWallet, double? amount, WeekReportModel? weekReport}) => SuccessState(
         listWallet: listWallet ?? this.listWallet,
+        amount: amount ?? this.amount,
         weekReport: weekReport ?? this.weekReport,
       );
+
+  @override
+  String toString() {
+    return 'SuccessState{listWallet: $listWallet, amount: $amount, weekReport: $weekReport}';
+  }
+}
+
+class FailureState extends HomePageState{
+  final String errorMessage;
+
+  const FailureState({required this.errorMessage});
+
+  @override
+  List<Object> get props => [errorMessage];
 }

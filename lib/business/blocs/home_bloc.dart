@@ -8,60 +8,35 @@ import 'package:viet_wallet/data/response/get_list_wallet_response.dart';
 import 'package:viet_wallet/data/response/week_report_response.dart';
 import 'package:viet_wallet/presentation/screens/home_screen/home_event.dart';
 import 'package:viet_wallet/presentation/screens/home_screen/home_state.dart';
-import 'package:viet_wallet/utils/enum/api_error_result.dart';
+import 'package:viet_wallet/utils/app_constants.dart';
 import 'package:viet_wallet/utils/screen_utilities.dart';
 
 class HomePageBloc extends Bloc<HomePageEvent, HomePageState> {
   final BuildContext context;
   final _walletRepository = WalletRepository();
 
-  HomePageBloc(this.context) : super(HomePageState()) {
+  HomePageBloc(this.context) : super(InitializedState()) {
     on((event, emit) async {
-      if (event is HomeInitial) {
-        emit(state.copyWith(isLoading: true));
+      if (event is InitializedEvent) {
+        emit(LoadingState());
 
         final connectivityResult = await Connectivity().checkConnectivity();
         if (connectivityResult == ConnectivityResult.none) {
-          emit(state.copyWith(
-            isLoading: false,
-            apiError: ApiError.noInternetConnection,
-          ));
+          emit(const FailureState(errorMessage: AppConstants.noInternetContent));
         } else {
           final response = await _walletRepository.getListWallet();
-
-          if (response is GetListWalletResponse) {
-            emit(state.copyWith(
-              isLoading: false,
-              apiError: ApiError.noError,
-              moneyTotal: response.moneyTotal,
-              listWallet: response.walletList,
-            ));
-          } else if (response is ExpiredTokenGetResponse && context.mounted) {
-            logoutIfNeed(context);
-          } else {
-            emit(state.copyWith(
-              isLoading: false,
-              apiError: ApiError.internalServerError,
-              listWallet: [],
-            ));
-          }
-
           final weekResponse = await CategoryProvider().getWeekReport();
 
-          if (weekResponse is WeekReportResponse) {
-            emit(state.copyWith(
-              isLoading: false,
-              apiError: ApiError.noError,
+          if (response is GetListWalletResponse && weekResponse is WeekReportResponse) {
+            emit(SuccessState(
+              listWallet: response.walletList,
+              amount: response.moneyTotal,
               weekReport: weekResponse.data,
             ));
-          } else if (weekResponse is ExpiredTokenGetResponse && context.mounted) {
+          } else if ((response is ExpiredTokenGetResponse || weekResponse is ExpiredTokenGetResponse) && context.mounted) {
             logoutIfNeed(context);
           } else {
-            emit(state.copyWith(
-              isLoading: false,
-              apiError: ApiError.internalServerError,
-              weekReport: null,
-            ));
+            emit(const FailureState(errorMessage: AppConstants.wrong));
           }
         }
       }

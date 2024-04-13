@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:viet_wallet/data/models/collection_model.dart';
 import 'package:viet_wallet/data/provider/collection_provider.dart';
 import 'package:viet_wallet/data/provider/wallet_provider.dart';
-import 'package:viet_wallet/data/response/collection_response.dart';
+import 'package:viet_wallet/data/response/base_get_response.dart';
 import 'package:viet_wallet/data/response/get_list_wallet_response.dart';
 import 'package:viet_wallet/presentation/screens/planning_screen/balance_payments/balance_payment.dart';
+import 'package:viet_wallet/presentation/screens/planning_screen/expenditure_analysis/analytics.dart';
 import '../../presentation/screens/collection_screen/collection_event.dart';
 import '../../presentation/screens/collection_screen/collection_state.dart';
 
@@ -15,15 +14,15 @@ class NewsCollectionBloc extends Bloc<CollectionEvent, CollectionState> {
   final _walletProvider = WalletProvider();
   final _collectionProvider = CollectionProvider();
 
-  NewsCollectionBloc(this.context) : super(const InitializedState(listWallet: [])) {
+  NewsCollectionBloc(this.context) : super(LoadingState()) {
     on((event, emit) async {
       if (event is CollectionInitialized) {
         emit(LoadingState());
 
         final response = await _walletProvider.getListWallet();
 
-        if (response.isOK() && response is GetListWalletResponse) {
-          emit(InitializedState(listWallet: response.walletList ?? []));
+        if (response is GetListWalletResponse) {
+          emit(FetchDataSuccessState(listWallet: response.walletList));
         } else {
           emit(const FailureState(errorMessage: 'Internal Server Error'));
         }
@@ -42,8 +41,10 @@ class NewsCollectionBloc extends Bloc<CollectionEvent, CollectionState> {
 
         final response = await _collectionProvider.newCollection(data: data);
 
-        if (response.isOK() && response is CollectionResponse) {
-          emit(const SuccessState(fromEvent: 'addNew'));
+        if (response is CollectionModel) {
+          emit(AddSuccessState());
+        } else if (response is ExpiredTokenGetResponse && context.mounted) {
+          logoutIfNeed(context);
         } else {
           emit(const FailureState(errorMessage: 'Thêm mới giao dịch không thành công!'));
         }
@@ -65,7 +66,7 @@ class NewsCollectionBloc extends Bloc<CollectionEvent, CollectionState> {
         final response = await _collectionProvider.updateCollection(collectionId: event.collectionId, data: data);
 
         if (response is CollectionModel) {
-          emit(const SuccessState(fromEvent: 'update'));
+          emit(UpdateSuccessState());
         } else {
           emit(const FailureState(errorMessage: 'Cập nhật giao dịch thất bại!'));
         }

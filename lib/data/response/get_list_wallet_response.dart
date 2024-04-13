@@ -2,8 +2,8 @@ import 'package:viet_wallet/data/models/wallet.dart';
 import 'package:viet_wallet/data/response/base_get_response.dart';
 
 class GetListWalletResponse extends BaseGetResponse {
-  final double? moneyTotal;
-  final List<Wallet>? walletList;
+  final double moneyTotal;
+  final List<Wallet> walletList;
 
   GetListWalletResponse({
     int? pageNumber,
@@ -11,8 +11,8 @@ class GetListWalletResponse extends BaseGetResponse {
     int? totalRecord,
     int? status,
     String? error,
-    this.moneyTotal,
-    this.walletList,
+    required this.moneyTotal,
+    required this.walletList,
   }) : super(
           pageNumber: pageNumber,
           pageSize: pageSize,

@@ -48,8 +48,8 @@ class _OptionCategoryPageState extends State<OptionCategoryPage> with SingleTick
 
   Future<void> _reloadPage() async {
     showLoading(context);
+    _optionCategoryBloc.add(GetOptionCategoryEvent());
     await Future.delayed(const Duration(seconds: 1), () {
-      _optionCategoryBloc.add(GetOptionCategoryEvent());
       Navigator.pop(context);
       setState(() {});
     });

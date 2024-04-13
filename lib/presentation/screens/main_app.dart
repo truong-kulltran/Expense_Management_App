@@ -4,11 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:viet_wallet/business/blocs/expenditure_report_bloc.dart';
-import 'package:viet_wallet/business/blocs/news_collection_bloc.dart';
-import 'package:viet_wallet/business/blocs/revenue_report_bloc.dart';
 import 'package:viet_wallet/presentation/screens/home_screen/home.dart';
-import 'package:viet_wallet/business/blocs/home_bloc.dart';
 import 'package:viet_wallet/presentation/screens/collection_screen/collection_screen.dart';
 import 'package:viet_wallet/utils/app_constants.dart';
 
@@ -17,7 +13,6 @@ import '../../business/blocs/planning_bloc.dart';
 import 'setting_screen/setting.dart';
 import 'wallet_screen/my_wallet.dart';
 import '../../business/blocs/my_wallet_bloc.dart';
-import 'home_screen/home_event.dart';
 
 class MainApp extends StatefulWidget {
   final int? currentTab;
@@ -107,19 +102,13 @@ class MainAppState extends State<MainApp> with WidgetsBindingObserver {
     Widget currentTab;
     switch (index) {
       case 0:
-        currentTab = MultiBlocProvider(
-          providers: [
-            BlocProvider<ExpenditureReportBloc>(create: (context) => ExpenditureReportBloc(context)),
-            BlocProvider<RevenueReportBloc>(create: (context) => RevenueReportBloc(context)),
-          ],
-          child: BlocProvider(create: (context) => HomePageBloc(context)..add(HomeInitial()), child: const HomePage()),
-        );
+        currentTab = const HomePage();
         break;
       case 1:
         currentTab = BlocProvider<MyWalletPageBloc>(create: (context) => MyWalletPageBloc(context), child: const MyWalletPage());
         break;
       case 2:
-        currentTab = BlocProvider<NewsCollectionBloc>(create: (context) => NewsCollectionBloc(context), child: const NewCollectionPage());
+        currentTab =  const CollectionPage(isEdit: false);
         break;
       case 3:
         currentTab = BlocProvider<PlanningBloc>(create: (context) => PlanningBloc(context), child: const PlanningPage());
@@ -128,7 +117,7 @@ class MainAppState extends State<MainApp> with WidgetsBindingObserver {
         currentTab = const SettingPage();
         break;
       default:
-        currentTab = BlocProvider(create: (context) => HomePageBloc(context), child: const HomePage());
+        currentTab = const HomePage();
     }
     return currentTab;
   }

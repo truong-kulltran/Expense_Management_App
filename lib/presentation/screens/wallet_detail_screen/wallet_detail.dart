@@ -2,18 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:viet_wallet/app/app_routes.dart';
-import 'package:viet_wallet/business/blocs/news_collection_bloc.dart';
 import 'package:viet_wallet/data/models/collection_model.dart';
 import 'package:viet_wallet/data/models/day_transaction_model.dart';
 import 'package:viet_wallet/data/models/wallet.dart';
 import 'package:viet_wallet/data/models/wallet_report_model.dart';
 import 'package:viet_wallet/business/blocs/wallet_details_bloc.dart';
-import 'package:viet_wallet/presentation/screens/collection_screen/collection_state.dart';
 import 'package:viet_wallet/presentation/screens/wallet_detail_screen/wallet_details_event.dart';
 import 'package:viet_wallet/presentation/screens/wallet_detail_screen/wallet_details_state.dart';
 import 'package:viet_wallet/presentation/widgets/app_image.dart';
-import 'package:viet_wallet/presentation/screens/collection_screen/collection_screen.dart';
-import 'package:viet_wallet/presentation/screens/collection_screen/collection_event.dart';
 import 'package:viet_wallet/utils/enum/api_error_result.dart';
 import 'package:viet_wallet/utils/enum/date_time_picker.dart';
 import 'package:viet_wallet/utils/screen_utilities.dart';
@@ -72,21 +68,23 @@ class _WalletDetailState extends State<WalletDetail> {
         }
       },
       builder: (context, curState) {
-        return _body(context, curState.walletReport!);
+        return _body(context, curState.walletReport);
       },
     );
   }
 
-  Widget _body(BuildContext context, WalletReport walletReport) {
+  Widget _body(BuildContext context, WalletReport? walletReport) {
+
+    if(walletReport == null){
+      return const SizedBox.shrink();
+    }
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         elevation: 0.5,
         backgroundColor: Theme.of(context).primaryColor,
         leading: InkWell(
-          onTap: () {
-            Navigator.pop(context);
-          },
+          onTap: () => Navigator.pop(context),
           child: const Icon(Icons.arrow_back_ios, size: 24, color: Colors.white),
         ),
         centerTitle: true,
