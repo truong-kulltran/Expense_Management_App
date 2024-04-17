@@ -19,9 +19,7 @@ class ExportBloc extends Bloc<ExportEvent, ExportState> {
 
         final response = await _walletProvider.getListWallet();
         if (response is GetListWalletResponse) {
-          emit(ExportInitial(
-            listWallet: response.walletList ?? [],
-          ));
+          emit(ExportInitial(listWallet: response.walletList));
         } else if (response is ExpiredTokenGetResponse && context.mounted) {
           logoutIfNeed(context);
         } else {
