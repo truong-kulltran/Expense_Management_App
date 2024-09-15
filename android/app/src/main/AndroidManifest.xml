@@ -11,12 +11,14 @@
         tools:remove="android:maxSdkVersion" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:requestLegacyExternalStorage="true"
-        android:label="viet_wallet"
+        android:label="E.Management"
         android:name="${applicationName}"
         android:icon="@drawable/app_icon">
         <activity
@@ -58,6 +60,6 @@
             android:value="false" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="wallet_app" />
+            android:value="high_importance_channel" />
     </application>
 </manifest>
