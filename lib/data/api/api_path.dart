@@ -22,8 +22,7 @@ class ApiPath {
 
   static const String apiLogoCategory = '$apiDomain/api/v1/category-logo';
 
-  static const String categoryReport =
-      '$apiDomain/api/v1/report/category-report';
+  static const String categoryReport = '$apiDomain/api/v1/report/category-report';
 
   static const String weekReport = '$apiDomain/api/v1/report/week-report';
 

@@ -5,7 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class FirebaseMessagingServices {
   //initialising firebase message plugin
-  FirebaseMessaging messaging = FirebaseMessaging.instance ;
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
 
   //initialising local notification plugin
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -13,7 +13,6 @@ class FirebaseMessagingServices {
   String fcmToken = '';
 
   Future<void> initializedNotification() async {
-
     // Local Notification Initialized
     // initLocalNotifications;
     requestNotificationPermission;
@@ -30,10 +29,10 @@ class FirebaseMessagingServices {
 
     ///for app
     FirebaseMessaging.onMessage.listen((message) async {
-        await messaging.setForegroundNotificationPresentationOptions(alert: true, badge: true, sound: true);
-        initLocalNotifications;
-        print('message: ${message.toString()}');
-        showNotification(message);
+      await messaging.setForegroundNotificationPresentationOptions(alert: true, badge: true, sound: true);
+      initLocalNotifications;
+      print('message: ${message.toString()}');
+      showNotification(message);
     });
 
     ///for app in background && not terminated
@@ -67,7 +66,8 @@ class FirebaseMessagingServices {
     var androidInitializationSettings = const AndroidInitializationSettings('@mipmap/ic_launcher');
     var iosInitializationSettings = const DarwinInitializationSettings();
 
-    var initializationSetting = InitializationSettings(android: androidInitializationSettings, iOS: iosInitializationSettings);
+    var initializationSetting =
+        InitializationSettings(android: androidInitializationSettings, iOS: iosInitializationSettings);
 
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSetting,
@@ -126,9 +126,11 @@ class FirebaseMessagingServices {
       // sound: androidNotificationChannel.sound,
     );
 
-    const DarwinNotificationDetails darwinNotificationDetails = DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
+    const DarwinNotificationDetails darwinNotificationDetails =
+        DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
 
-    NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails, iOS: darwinNotificationDetails);
+    NotificationDetails notificationDetails =
+        NotificationDetails(android: androidNotificationDetails, iOS: darwinNotificationDetails);
 
     await Future.delayed(Duration.zero, () {
       if (notification != null) {
@@ -143,14 +145,14 @@ class FirebaseMessagingServices {
     });
   }
 
-  Future<void> _localBackgroundHandlers(NotificationResponse data) async {
-    try {
-      var payloadObj = json.decode(data.payload ?? "{}") as Map? ?? {};
-      _openNotification(payloadObj);
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
+  // Future<void> _localBackgroundHandlers(NotificationResponse data) async {
+  //   try {
+  //     var payloadObj = json.decode(data.payload ?? "{}") as Map? ?? {};
+  //     _openNotification(payloadObj);
+  //   } catch (e) {
+  //     debugPrint(e.toString());
+  //   }
+  // }
 
   void _openNotification(Map payloadObj) async {
     await Future.delayed(const Duration(milliseconds: 300));

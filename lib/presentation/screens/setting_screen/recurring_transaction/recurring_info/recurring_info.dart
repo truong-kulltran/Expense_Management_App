@@ -56,7 +56,8 @@ class _RecurringInfoState extends State<RecurringInfo> {
 
   String? optionTitle;
 
-  ItemCategory itemCategorySelected = ItemCategory(categoryId: null, title: "Chọn hạng mục", iconLeading: '', type: TransactionType.expense);
+  ItemCategory itemCategorySelected =
+      ItemCategory(categoryId: null, title: "Chọn hạng mục", iconLeading: '', type: TransactionType.expense);
 
   List<DayOfWeek> listDay = [];
   FrequencyType frequencyType = FrequencyType.daily;
@@ -135,7 +136,8 @@ class _RecurringInfoState extends State<RecurringInfo> {
           icon: const Icon(Icons.close, size: 24, color: Colors.white),
         ),
         centerTitle: true,
-        title: const Text('Giao dịch định kỳ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+        title: const Text('Giao dịch định kỳ',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
       ),
       body: BlocConsumer<RecurringInfoBloc, RecurringInfoState>(
         listenWhen: (preState, curState) {
@@ -165,7 +167,9 @@ class _RecurringInfoState extends State<RecurringInfo> {
           children: <Widget>[
             _money(),
             _select(state),
-            widget.isEdit ? _buttonDeleteUpdate(context, walletId, itemCategorySelected.categoryId) : _buttonSave(context, walletId, itemCategorySelected.categoryId),
+            widget.isEdit
+                ? _buttonDeleteUpdate(context, walletId, itemCategorySelected.categoryId)
+                : _buttonSave(context, walletId, itemCategorySelected.categoryId),
           ],
         ),
       ),
@@ -241,6 +245,7 @@ class _RecurringInfoState extends State<RecurringInfo> {
                   );
 
                   if (response is RecurringPost) {
+                    if (!mounted) return;
                     showMessage1OptionDialog(
                       this.context,
                       'Cập nhật giao dịch định kỳ thành công',
@@ -326,7 +331,8 @@ class _RecurringInfoState extends State<RecurringInfo> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
       child: Container(
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Theme.of(context).colorScheme.background),
+        decoration:
+            BoxDecoration(borderRadius: BorderRadius.circular(10), color: Theme.of(context).colorScheme.background),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -350,7 +356,8 @@ class _RecurringInfoState extends State<RecurringInfo> {
       onTap: () async => await _getWallet(listWallet),
       dense: false,
       horizontalTitleGap: 6,
-      leading: Icon(isNotNullOrEmpty(walletType) ? getIconWallet(walletType: walletType!) : Icons.help_outline, size: 30, color: Colors.grey),
+      leading: Icon(isNotNullOrEmpty(walletType) ? getIconWallet(walletType: walletType!) : Icons.help_outline,
+          size: 30, color: Colors.grey),
       title: Text(
         walletName ?? 'Chọn tài khoản/ ví',
         style: TextStyle(fontSize: 16, color: isNotNullOrEmpty(walletName) ? Colors.black : Colors.grey),
@@ -467,6 +474,7 @@ class _RecurringInfoState extends State<RecurringInfo> {
     );
   }
 
+  // ignore: unused_element
   Widget _mathReport() {
     return Container(
       decoration: BoxDecoration(
@@ -524,7 +532,8 @@ class _RecurringInfoState extends State<RecurringInfo> {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Container(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.background, borderRadius: BorderRadius.circular(10)),
+        decoration:
+            BoxDecoration(color: Theme.of(context).colorScheme.background, borderRadius: BorderRadius.circular(10)),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -568,7 +577,8 @@ class _RecurringInfoState extends State<RecurringInfo> {
     final OptionRepeatData result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OptionRepeatTime(fromDate: fromDate, toDate: toDate, time: time, frequencyType: frequencyType, listDay: listDay),
+        builder: (context) => OptionRepeatTime(
+            fromDate: fromDate, toDate: toDate, time: time, frequencyType: frequencyType, listDay: listDay),
       ),
     );
     result.dayOfWeeks.sort((a, b) => a.index.compareTo(b.index));
@@ -637,7 +647,9 @@ class _RecurringInfoState extends State<RecurringInfo> {
                           },
                           child: Container(
                             height: 60,
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Theme.of(context).colorScheme.background),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Theme.of(context).colorScheme.background),
                             alignment: Alignment.center,
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
@@ -645,7 +657,9 @@ class _RecurringInfoState extends State<RecurringInfo> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 10),
                                   child: Icon(
-                                    isNotNullOrEmpty(listWallet[index].accountType) ? getIconWallet(walletType: listWallet[index].accountType) : Icons.help,
+                                    isNotNullOrEmpty(listWallet[index].accountType)
+                                        ? getIconWallet(walletType: listWallet[index].accountType)
+                                        : Icons.help,
                                     size: 30,
                                     color: Colors.grey.withOpacity(0.6),
                                   ),
@@ -669,7 +683,8 @@ class _RecurringInfoState extends State<RecurringInfo> {
                                 if (walletId == listWallet[index].id)
                                   Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 10),
-                                    child: Icon(Icons.check_circle_outline, color: Theme.of(context).primaryColor, size: 24),
+                                    child: Icon(Icons.check_circle_outline,
+                                        color: Theme.of(context).primaryColor, size: 24),
                                   ),
                               ],
                             ),
